@@ -1,0 +1,15 @@
+[out:json][timeout:180];
+(
+  way["highway"](bbox);
+  node["highway"="traffic_signals"](bbox);
+  node["highway"="stop"](bbox);
+  node["highway"="give_way"](bbox);
+  way["building"](bbox);
+  way["highway"="footway"](bbox);
+  way["highway"="cycleway"](bbox);
+  way["natural"="water"](bbox);
+  way["landuse"](bbox);
+);
+out body;
+>;
+out skel qt;
