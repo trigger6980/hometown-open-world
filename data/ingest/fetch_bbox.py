@@ -2,9 +2,11 @@
 """Fetch OSM data for a bounding box via Overpass API.
 
 Usage:
-    python fetch_bbox.py --bbox 30.35,-91.25,30.55,-91.05 --out br_downtown.json
+    python fetch_bbox.py                      # downtown Baton Rouge (default)
+    python fetch_bbox.py --preset nola       # French Quarter / Marigny, New Orleans
+    python fetch_bbox.py --bbox 30.35,-91.25,30.55,-91.05 --out br.json
 
-Default bbox is downtown Baton Rouge.
+Presets live in PRESETS below. Add cities as you test them.
 """
 import argparse
 import json
@@ -14,6 +16,19 @@ import urllib.parse
 import urllib.request
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+PRESETS = {
+    "br": {
+        "bbox": "30.35,-91.25,30.55,-91.05",
+        "out": "br_downtown.json",
+        "label": "downtown Baton Rouge",
+    },
+    "nola": {
+        "bbox": "29.955,-90.075,29.975,-90.045",
+        "out": "nola_french_quarter.json",
+        "label": "French Quarter / Marigny, New Orleans",
+    },
+}
 
 QUERY_TEMPLATE = """[out:json][timeout:180];
 (
@@ -86,11 +101,16 @@ def elements_iter(data: dict):
 def main() -> None:
     p = argparse.ArgumentParser(description="Fetch OSM data for a bbox")
     p.add_argument(
-        "--bbox",
-        default="30.35,-91.25,30.55,-91.05",
-        help="south,west,north,east (default: downtown Baton Rouge)",
+        "--preset",
+        choices=sorted(PRESETS.keys()),
+        help="named city bbox (br, nola)",
     )
-    p.add_argument("--out", default="br_downtown.json", help="output JSON path")
+    p.add_argument(
+        "--bbox",
+        default=None,
+        help="south,west,north,east (overrides --preset)",
+    )
+    p.add_argument("--out", default=None, help="output JSON path")
     p.add_argument(
         "--summary-only",
         dest="summary_only",
@@ -99,18 +119,29 @@ def main() -> None:
         help="print summary and skip writing full JSON",
     )
     args = p.parse_args()
-    print(f"fetching bbox {args.bbox} ...", flush=True)
+
+    if args.preset:
+        preset = PRESETS[args.preset]
+        bbox, out, label = preset["bbox"], args.out or preset["out"], preset["label"]
+    elif args.bbox:
+        bbox, out, label = args.bbox, args.out or "custom.json", "custom bbox"
+    else:
+        preset = PRESETS["br"]
+        bbox, out, label = preset["bbox"], args.out or preset["out"], preset["label"]
+
+    print(f"fetching {label} ({bbox}) ...", flush=True)
     t0 = time.time()
-    data = fetch(args.bbox)
+    data = fetch(bbox)
     elapsed = time.time() - t0
     summary = summarize(data)
     summary["elapsed_sec"] = round(elapsed, 1)
-    summary["bbox"] = args.bbox
+    summary["bbox"] = bbox
+    summary["label"] = label
     print(json.dumps(summary, indent=2))
     if not args.summary_only:
-        with open(args.out, "w", encoding="utf-8") as f:
+        with open(out, "w", encoding="utf-8") as f:
             json.dump(data, f)
-        print(f"wrote {args.out}")
+        print(f"wrote {out}")
 
 
 if __name__ == "__main__":
