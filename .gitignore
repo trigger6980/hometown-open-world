@@ -1,0 +1,35 @@
+# Binaries & build
+*.exe
+*.app
+*.so
+*.dll
+*.wasm
+.godot/
+build/
+dist/
+
+# Data — raw extracts are too large for git
+*.pbf
+*.osm
+raw/
+*.tile
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Rust
+target/
+Cargo.lock
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.pem
+credentials.json
