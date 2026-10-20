@@ -1,0 +1,2 @@
+# fetch_bbox.py has no third-party dependencies (stdlib only).
+# Kept for future pipeline steps (geopandas, shapely, numpy).
